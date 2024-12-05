@@ -1,0 +1,12 @@
+{
+    "folders": [
+        {
+            "path": ".",
+            "name": "🎄 Advent of Code 2024"
+        }
+    ],
+    "settings": {},
+    "extensions": {
+        "recommendations": ["charliermarsh.ruff"]
+    }
+}
