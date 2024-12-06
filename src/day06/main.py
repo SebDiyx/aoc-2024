@@ -108,21 +108,29 @@ def part2(filename: str):
     lines = file.strip().split("\n")
     grid = [list(line) for line in lines]
 
-    # print(grid)
+    base_guard = Guard(grid)
+    while not base_guard.is_outside(grid):
+        base_guard.tick(grid)
 
+    idx = 0
     answer = 0
-    for y, line in enumerate(grid):
-        for x, char in enumerate(line):
-            print(x, y)
-            if char == ".":  # Empty space
-                grid[y][x] = "#"
-                guard = Guard(grid)
-                while not guard.is_outside(grid) and not guard.has_looped():
-                    guard.tick(grid)
-                    if guard.has_looped():
-                        answer += 1
+    for loc in base_guard.unique_locations:
+        idx += 1
+        print(str(idx / len(base_guard.unique_locations) * 100) + "%")
 
-                grid[y][x] = "."
+        x, y = loc
+
+        if grid[y][x] != ".":
+            continue
+
+        grid[y][x] = "#"
+        guard = Guard(grid)
+        while not guard.is_outside(grid) and not guard.has_looped():
+            guard.tick(grid)
+            if guard.has_looped():
+                answer += 1
+
+        grid[y][x] = "."
 
     return answer
 
