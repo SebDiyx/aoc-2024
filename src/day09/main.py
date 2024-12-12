@@ -6,7 +6,7 @@ def test_part1():
 
 
 def test_part2():
-    assert part2("sample.txt") == 6
+    assert part2("sample.txt") == 2858
 
 
 def part1(filename: str):
@@ -28,7 +28,7 @@ def part1(filename: str):
             file_id += 1
 
     # Group files into 1 block
-    for idx in range(len(disk)-1, 0, -1):
+    for idx in range(len(disk) - 1, 0, -1):
         file_id = disk[idx]
 
         if file_id is None:
@@ -36,7 +36,7 @@ def part1(filename: str):
 
         first_empty_idx = disk.index(None)
 
-        if (first_empty_idx > idx):
+        if first_empty_idx > idx:
             break
 
         disk[first_empty_idx] = file_id
@@ -45,74 +45,82 @@ def part1(filename: str):
     # Check sum
     checksum = 0
     for idx, val in enumerate(disk):
-        if (val is None):
+        if val is None:
             break
         checksum += idx * val
 
     return checksum
 
 
+def print_disk(disk: list[int | None]):
+    for idx, val in enumerate(disk):
+        if val is None:
+            print(".", end="")
+        else:
+            print(val, end="")
+    print()
+
+
+def get_first_possible_slot(disk: list[int | None], file_length: int):
+    empty_start = None
+    empty_length = 0
+    for idx, val in enumerate(disk):
+        if val is None:
+            empty_length += 1
+            if empty_start is None:
+                empty_start = idx
+
+            if empty_length == file_length:
+                return empty_start
+
+        else:
+            empty_start = None
+            empty_length = 0
+
+    return None
+
+
 def part2(filename: str):
     input = open(Path(__file__).parent / filename, "r").read()
 
     # Parse input into disk image
-    file_id = 0
-    curr_start = 0
-    disk = []
+    curr_file_id = 0
+    disk: list[int | None] = []
     for idx, char in enumerate(input):
         is_file = idx % 2 == 0
-        length = int(char)
+
+        for _ in range(int(char)):
+            if is_file:
+                disk.append(curr_file_id)
+            else:
+                disk.append(None)
 
         if is_file:
-            disk.append({
-                "type": "file",
-                "id": file_id,
-                "start": curr_start,
-                "end": curr_start + length - 1
-            })
-        else:
-            disk.append({
-                "type": "empty",
-                "start": curr_start,
-                "end": curr_start + length - 1
-            })
+            curr_file_id += 1
 
-        curr_start += length
+    # Defragment disk
+    for id in range(curr_file_id - 1, 0, -1):
+        print(f"curr file id: {id}")
+        start_idx = disk.index(id)
+        end_idx = len(disk) - disk[::-1].index(id) - 1
+        length = end_idx - start_idx + 1
 
-        if is_file:
-            file_id += 1
+        # Find first empty slot that will fit the file
+        empty_idx = get_first_possible_slot(disk, length)
 
-    # Fragment files
-    for curr_file_id in range(file_id-1, 0, -1):
-        file_details = filter(lambda x: x["type"]
-                              == "file" and x["id"] == curr_file_id, disk)
+        if empty_idx is None or empty_idx > start_idx:
+            continue
 
-        file_length = file_details["end"] - file_details["start"] + 1
-        first_empty_idx = disk.find(
-            lambda x: x["type"] == "empty" and x["end"] - x["start"] + 1 >= file_length)
-
-        if (first_empty_idx > file_details["start"]):
-            break
-
-        # Swap the file with the empty block
-        disk[first_empty_idx] = {
-            "type": "file",
-            "id": curr_file_id,
-            "start": disk[first_empty_idx]["start"],
-            "end": disk[first_empty_idx]["start"] + file_length - 1
-        }
-
-        disk[] = {
-            "type": "empty",
-            "start": file_details["start"],
-            "end": file_details["end"]
-        }
+        for idx in range(start_idx, end_idx + 1):
+            disk[empty_idx] = disk[idx]
+            disk[idx] = None
+            empty_idx += 1
 
     # Check sum
     checksum = 0
     for idx, val in enumerate(disk):
-        if (val is None):
-            break
+        if val is None:
+            continue
         checksum += idx * val
 
     return checksum
@@ -120,8 +128,8 @@ def part2(filename: str):
 
 if __name__ == "__main__":
     print("\n------ day09 ------")
-    test_part1()
-    print("part1 answer: " + str(part1("input.txt")))
+    # test_part1()
+    # print("part1 answer: " + str(part1("input.txt")))
 
-    # test_part2()
-    # print("part2 answer: " + str(part2("input.txt")))
+    test_part2()
+    print("part2 answer: " + str(part2("input.txt")))
